@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f0f11" />
+  <meta name="description" content="Photography portfolio capturing honest portraits, celebrations and visual stories." />
+  <title>NOIR — Photography & Visual Stories</title>
+
+  <!-- Tailwind CSS CDN for utility classes; custom CSS below handles the art direction. -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+  <style>
+    :root { --bg:#0f0f11; --panel:#171719; --text:#f3f3f5; --muted:#a1a1aa; --line:rgba(255,255,255,.12); --accent:#d97706; }
+    * { box-sizing:border-box; }
+    .skip-link { position:fixed; left:1rem; top:1rem; z-index:100; padding:.8rem 1rem; background:var(--accent); color:#fff; transform:translateY(-160%); transition:transform .2s; }
+    .skip-link:focus { transform:translateY(0); }
+    :focus-visible { outline:2px solid #fbbf24; outline-offset:4px; }
+    .filter-chip { border:1px solid rgba(255,255,255,.18); color:#c4c4cb; padding:.7rem 1rem; font-size:.75rem; letter-spacing:.04em; transition:background .2s,color .2s,border-color .2s; }
+    .filter-chip[aria-pressed="true"], .filter-chip:hover { background:var(--accent); color:white; border-color:var(--accent); }
+    .lightbox { position:fixed; inset:0; z-index:80; background:rgba(5,5,6,.96); display:flex; align-items:center; justify-content:center; padding:1.5rem; opacity:0; visibility:hidden; transition:opacity .25s,visibility .25s; }
+    .lightbox.open { opacity:1; visibility:visible; }
+    .lightbox img { max-width:min(100%,1100px); max-height:78vh; object-fit:contain; }
+    .lightbox-close { position:absolute; top:1.2rem; right:1.2rem; width:46px; height:46px; border:1px solid rgba(255,255,255,.3); background:#171719; }
+    .gallery-card[hidden] { display:none; }
+    html { scroll-behavior:smooth; scroll-padding-top:90px; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; overflow-x:hidden; }
+    body.menu-open { overflow:hidden; }
+    ::selection { background:var(--accent); color:#fff; }
+    .glass { background:rgba(15,15,17,.72); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border-bottom:1px solid rgba(255,255,255,.08); }
+    .eyebrow { color:var(--accent); font-size:.72rem; font-weight:700; letter-spacing:.22em; text-transform:uppercase; }
+    .display { letter-spacing:-.065em; line-height:.92; }
+    .muted { color:var(--muted); }
+    .accent { color:var(--accent); }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:.7rem; padding:1rem 1.35rem; border:1px solid var(--accent); background:var(--accent); color:#fff; font-size:.82rem; font-weight:700; letter-spacing:.02em; transition:transform .25s,background .25s,border-color .25s; }
+    .btn:hover { transform:translateY(-3px); background:#b96305; border-color:#b96305; }
+    .btn-outline { background:transparent; border-color:rgba(255,255,255,.3); }
+    .btn-outline:hover { background:#fff; color:#111; border-color:#fff; }
+    .nav-overlay { position:fixed; inset:0; z-index:40; background:rgba(10,10,11,.98); display:flex; align-items:center; justify-content:center; opacity:0; visibility:hidden; transform:translateY(-12px); transition:opacity .3s,visibility .3s,transform .3s; }
+    .nav-overlay.open { opacity:1; visibility:visible; transform:translateY(0); }
+    .nav-link { display:block; font-size:clamp(2.3rem,7vw,5.3rem); font-weight:700; letter-spacing:-.06em; padding:.3rem 0; transition:color .2s,transform .2s; }
+    .nav-link:hover { color:var(--accent); transform:translateX(8px); }
+    .hero { position:relative; min-height:100svh; display:flex; align-items:flex-end; overflow:hidden; }
+    .hero-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 42%; transform:scale(1.02); animation:heroReveal 1.3s ease both; }
+    .hero:after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,rgba(0,0,0,.68),rgba(0,0,0,.12) 72%),linear-gradient(0deg,rgba(0,0,0,.66),transparent 55%); }
+    .hero-content { position:relative; z-index:1; width:100%; padding:9rem max(1.25rem,calc((100vw - 1240px)/2)) 5.5rem; }
+    .hero-index { writing-mode:vertical-rl; letter-spacing:.2em; font-size:.65rem; color:rgba(255,255,255,.65); }
+    .section-wrap { width:min(1240px,calc(100% - 3rem)); margin-inline:auto; }
+    .section-space { padding-block:7.5rem; }
+    .gallery-track { display:flex; gap:1.25rem; overflow-x:auto; padding:1rem 0 2rem; scroll-snap-type:x mandatory; scrollbar-width:thin; scrollbar-color:var(--accent) #252528; cursor:grab; }
+    .gallery-track:active { cursor:grabbing; }
+    .gallery-card { position:relative; flex:0 0 min(74vw,380px); height:490px; overflow:hidden; scroll-snap-align:start; background:#202023; }
+    .gallery-card img { width:100%; height:100%; object-fit:cover; transition:transform .8s cubic-bezier(.2,.7,.2,1),filter .5s; filter:brightness(.82); }
+    .gallery-card:hover img { transform:scale(1.07); filter:brightness(.65); }
+    .gallery-card:after { content:""; position:absolute; inset:35% 0 0; background:linear-gradient(transparent,rgba(0,0,0,.85)); pointer-events:none; }
+    .gallery-caption { position:absolute; z-index:1; left:1.5rem; right:1.5rem; bottom:1.5rem; }
+    .gallery-number { font-size:.7rem; letter-spacing:.18em; color:#fbbf24; }
+    .about-photo { min-height:530px; position:relative; overflow:hidden; background:#242427; }
+    .about-photo img { width:100%; height:100%; min-height:530px; object-fit:cover; }
+    .stat { border-top:1px solid var(--line); padding-top:1.1rem; }
+    .service-card { background:linear-gradient(145deg,#19191c,#131315); border:1px solid var(--line); padding:2rem; transition:transform .25s,border-color .25s; }
+    .service-card:hover { transform:translateY(-6px); border-color:rgba(217,119,6,.7); }
+    .service-card ul { list-style:none; padding:0; margin:1.6rem 0 0; }
+    .service-card li { display:flex; gap:.7rem; color:#c4c4cb; font-size:.86rem; padding:.55rem 0; border-bottom:1px solid rgba(255,255,255,.06); }
+    .service-card li i { color:var(--accent); margin-top:.2rem; }
+    .field { width:100%; background:#171719; color:var(--text); border:1px solid rgba(255,255,255,.14); padding:1rem; outline:none; transition:border-color .2s; border-radius:0; }
+    .field:focus { border-color:var(--accent); }
+    .field::placeholder { color:#777780; }
+    select.field { color:#a1a1aa; }
+    .reveal { opacity:0; transform:translateY(24px); transition:opacity .7s ease,transform .7s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+    .social-link { display:inline-flex; width:42px; height:42px; align-items:center; justify-content:center; border:1px solid var(--line); transition:background .2s,border-color .2s; }
+    .social-link:hover { background:var(--accent); border-color:var(--accent); }
+    @keyframes heroReveal { from { opacity:.4; transform:scale(1.08); } to { opacity:1; transform:scale(1.02); } }
+    @media (max-width:640px) {
+      .section-wrap { width:calc(100% - 2rem); }
+      .section-space { padding-block:5rem; }
+      .hero-content { padding:8rem 1rem 3.5rem; }
+      .gallery-card { flex-basis:82vw; height:420px; }
+      .about-photo,.about-photo img { min-height:390px; }
+      .service-card { padding:1.5rem; }
+    }
+    @media (prefers-reduced-motion:reduce) {
+      *,*::before,*::after { scroll-behavior:auto !important; animation-duration:.01ms !important; transition-duration:.01ms !important; }
+      .reveal { opacity:1; transform:none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#mainContent">Skip to content</a>
+  <!-- Sticky blurred header -->
+  <header class="fixed top-0 left-0 right-0 z-50 glass">
+    <div class="section-wrap h-[78px] flex items-center justify-between">
+      <a href="#home" class="flex items-center gap-3" aria-label="NOIR Photography home">
+        <span class="w-9 h-9 border border-white/40 flex items-center justify-center text-sm font-bold tracking-tighter">N.</span>
+        <span class="font-bold tracking-[.2em] text-sm">NOIR<span class="text-amber-600">.</span></span>
+      </a>
+      <div class="flex items-center gap-5">
+        <span class="hidden sm:block text-[10px] uppercase tracking-[.2em] text-white/55">Independent photographer · Johannesburg</span>
+        <button id="menuToggle" class="relative z-[60] w-11 h-11 flex flex-col gap-[6px] items-center justify-center border border-white/20 hover:border-amber-600 transition" aria-label="Open navigation menu" aria-expanded="false" aria-controls="navOverlay">
+          <span class="menu-line block w-5 h-px bg-white transition-all"></span>
+          <span class="menu-line block w-5 h-px bg-white transition-all"></span>
+          <span class="menu-line block w-3 h-px bg-white self-end mr-[11px] transition-all"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Full-screen menu -->
+  <nav id="navOverlay" class="nav-overlay" aria-label="Main navigation" aria-hidden="true">
+    <div class="w-full max-w-5xl px-8">
+      <p class="eyebrow mb-8">Find your way</p>
+      <a class="nav-link" href="#gallery"><span class="accent text-base align-middle mr-4">01</span>Gallery</a>
+      <a class="nav-link" href="#about"><span class="accent text-base align-middle mr-4">02</span>About</a>
+      <a class="nav-link" href="#services"><span class="accent text-base align-middle mr-4">03</span>Services</a>
+      <a class="nav-link" href="#contact"><span class="accent text-base align-middle mr-4">04</span>Contact</a>
+      <p class="muted text-sm mt-10">Available for selected projects worldwide.</p>
+    </div>
+  </nav>
+
+  <main id="mainContent">
+    <!-- Hero: replace this Unsplash URL with your strongest landscape/portrait photograph. -->
+    <section id="home" class="hero">
+      <img class="hero-bg" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=2200&q=90" alt="Editorial portrait in soft natural light" fetchpriority="high" />
+      <div class="hero-content">
+        <div class="flex items-center gap-3 mb-7">
+          <span class="block w-10 h-px bg-amber-600"></span>
+          <p class="eyebrow">Photography · Direction · Storytelling</p>
+        </div>
+        <h1 class="display text-6xl sm:text-7xl md:text-8xl lg:text-[7.7rem] font-bold max-w-5xl">Stories worth<br /><span class="text-white/55">standing still for.</span></h1>
+        <div class="mt-8 flex flex-col sm:flex-row sm:items-end justify-between gap-8 max-w-5xl">
+          <p class="text-white/75 max-w-md leading-7 text-sm sm:text-base">Honest moments. Intentional frames. Images that feel as vivid years from now as they do today.</p>
+          <a href="#gallery" class="btn self-start">Explore work <i class="fa-solid fa-arrow-down-long"></i></a>
+        </div>
+        <div class="hidden md:flex absolute right-8 bottom-24 items-center gap-4">
+          <span class="hero-index">01 / THE PORTFOLIO</span>
+          <span class="w-px h-16 bg-white/40"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured gallery: drag horizontally or use the trackpad / horizontal scrollbar. -->
+    <section id="gallery" class="section-space">
+      <div class="section-wrap">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-10 reveal">
+          <div>
+            <p class="eyebrow mb-4">Selected stories · 2022—2026</p>
+            <h2 class="display text-4xl sm:text-5xl md:text-6xl font-semibold">A few frames<br />from the world.</h2>
+          </div>
+          <p class="muted max-w-sm text-sm leading-6">A considered collection of people, places and the moments in between. Drag to explore the full series.</p>
+        </div>
+        <div class="flex flex-wrap gap-2 mb-5" role="group" aria-label="Filter photography projects">
+          <button class="filter-chip" type="button" data-filter="all" aria-pressed="true">All work</button>
+          <button class="filter-chip" type="button" data-filter="portraits" aria-pressed="false">Portraits</button>
+          <button class="filter-chip" type="button" data-filter="weddings" aria-pressed="false">Weddings</button>
+          <button class="filter-chip" type="button" data-filter="editorial" aria-pressed="false">Editorial</button>
+          <button class="filter-chip" type="button" data-filter="events" aria-pressed="false">Events & music</button>
+          <button class="filter-chip" type="button" data-filter="commercial" aria-pressed="false">Commercial</button>
+        </div>
+        <div class="gallery-track" id="galleryTrack" aria-label="Featured photography projects">
+          <!-- Replace each Unsplash src with your own project image. -->
+          <a class="gallery-card group" href="#contact" data-category="portraits" aria-label="Open photography image: portraits">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=85" alt="Portrait photography project" loading="lazy" draggable="false" />
+            <div class="gallery-caption"><span class="gallery-number">01 — PORTRAITS</span><h3 class="text-2xl font-semibold mt-2">In their own light <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-2 opacity-0 group-hover:opacity-100 transition"></i></h3><p class="text-sm text-white/65 mt-2">Character, connection, presence.</p></div>
+          </a>
+          <a class="gallery-card group" href="#contact" data-category="weddings" aria-label="Open photography image: weddings">
+            <img src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&q=85" alt="Wedding celebration photography" loading="lazy" draggable="false" />
+            <div class="gallery-caption"><span class="gallery-number">02 — WEDDINGS</span><h3 class="text-2xl font-semibold mt-2">The in-between <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-2 opacity-0 group-hover:opacity-100 transition"></i></h3><p class="text-sm text-white/65 mt-2">The day, honestly remembered.</p></div>
+          </a>
+          <a class="gallery-card group" href="#contact" data-category="editorial" aria-label="Open photography image: editorial">
+            <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=85" alt="Fashion editorial photography" loading="lazy" draggable="false" />
+            <div class="gallery-caption"><span class="gallery-number">03 — EDITORIAL</span><h3 class="text-2xl font-semibold mt-2">Form & feeling <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-2 opacity-0 group-hover:opacity-100 transition"></i></h3><p class="text-sm text-white/65 mt-2">A point of view, in every frame.</p></div>
+          </a>
+          <a class="gallery-card group" href="#contact" data-category="events" aria-label="Open photography image: events">
+            <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=900&q=85" alt="Live event and music photography" loading="lazy" draggable="false" />
+            <div class="gallery-caption"><span class="gallery-number">04 — EVENTS</span><h3 class="text-2xl font-semibold mt-2">Room for a feeling <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-2 opacity-0 group-hover:opacity-100 transition"></i></h3><p class="text-sm text-white/65 mt-2">Energy that lives beyond the night.</p></div>
+          </a>
+          <a class="gallery-card group" href="#contact" data-category="commercial" aria-label="Open photography image: commercial">
+            <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85" alt="Minimal commercial product photography" loading="lazy" draggable="false" />
+            <div class="gallery-caption"><span class="gallery-number">05 — COMMERCIAL</span><h3 class="text-2xl font-semibold mt-2">Objects of desire <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-2 opacity-0 group-hover:opacity-100 transition"></i></h3><p class="text-sm text-white/65 mt-2">Product stories built to connect.</p></div>
+          </a>
+          <a class="gallery-card group" href="#contact" data-category="events" aria-label="Open photography image: events">
+            <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=900&q=85" alt="Concert and performance photography" loading="lazy" draggable="false" />
+            <div class="gallery-caption"><span class="gallery-number">06 — LIVE MUSIC</span><h3 class="text-2xl font-semibold mt-2">After the lights <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-2 opacity-0 group-hover:opacity-100 transition"></i></h3><p class="text-sm text-white/65 mt-2">The pulse of a live performance.</p></div>
+          </a>
+        </div>
+        <div class="flex justify-end gap-2 mt-2">
+          <button id="galleryPrev" class="w-11 h-11 border border-white/20 hover:border-amber-600 transition" aria-label="Previous gallery items"><i class="fa-solid fa-arrow-left"></i></button>
+          <button id="galleryNext" class="w-11 h-11 border border-white/20 hover:border-amber-600 transition" aria-label="Next gallery items"><i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="section-space bg-[#141416]">
+      <div class="section-wrap grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div class="about-photo reveal">
+          <!-- Replace with a behind-the-scenes or photographer portrait image. -->
+          <img src="https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=1100&q=85" alt="Photographer working with a camera on location" loading="lazy" />
+          <div class="absolute bottom-5 left-5 bg-black/70 backdrop-blur px-4 py-3">
+            <p class="text-[10px] uppercase tracking-[.2em] text-white/60">Behind the lens</p>
+            <p class="text-sm font-semibold mt-1">Curiosity first. Camera second.</p>
+          </div>
+        </div>
+        <div class="reveal">
+          <p class="eyebrow mb-5">A little about me</p>
+          <h2 class="display text-4xl sm:text-5xl md:text-6xl font-semibold">Not just how<br />it looked.<br /><span class="text-white/45">How it felt.</span></h2>
+          <div class="mt-7 space-y-4 text-sm sm:text-base leading-7 muted max-w-xl">
+            <p>I'm Alex Morgan, a photographer and visual storyteller drawn to real connection, beautiful details and the unexpected moments that make a story yours.</p>
+            <p>From intimate portraits to ambitious brand campaigns, I bring a calm, collaborative approach to every shoot—creating space for people to feel comfortable and images to feel alive.</p>
+          </div>
+          <a href="#contact" class="inline-flex items-center gap-3 mt-7 text-sm font-semibold hover:text-amber-500 transition">Let's make something meaningful <i class="fa-solid fa-arrow-right accent"></i></a>
+          <div class="grid grid-cols-3 gap-5 mt-12">
+            <div class="stat"><p class="text-3xl sm:text-4xl font-semibold">08<span class="accent">+</span></p><p class="muted text-xs mt-2 leading-5">Years behind<br />the lens</p></div>
+            <div class="stat"><p class="text-3xl sm:text-4xl font-semibold">240<span class="accent">+</span></p><p class="muted text-xs mt-2 leading-5">Projects<br />completed</p></div>
+            <div class="stat"><p class="text-3xl sm:text-4xl font-semibold">12</p><p class="muted text-xs mt-2 leading-5">Countries<br />explored</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Services -->
+    <section id="services" class="section-space">
+      <div class="section-wrap">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-12 reveal">
+          <div><p class="eyebrow mb-4">Ways to work together</p><h2 class="display text-4xl sm:text-5xl md:text-6xl font-semibold">Made around<br />your story.</h2></div>
+          <p class="muted max-w-sm text-sm leading-6">Every project starts with a conversation. These starting points help us find the right fit for your idea, timeline and budget.</p>
+        </div>
+        <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <article class="service-card reveal">
+            <div class="flex justify-between items-start"><span class="text-2xl accent"><i class="fa-regular fa-user"></i></span><span class="eyebrow">01 / Personal</span></div>
+            <h3 class="text-2xl font-semibold mt-8">Portrait sessions</h3>
+            <p class="muted text-sm leading-6 mt-3">Thoughtful, relaxed portraits that feel unmistakably like you.</p>
+            <p class="mt-7 text-3xl font-semibold">From <span class="accent">R1,800</span></p>
+            <ul><li><i class="fa-solid fa-check"></i> 60–90 minute session</li><li><i class="fa-solid fa-check"></i> One location, guided posing</li><li><i class="fa-solid fa-check"></i> 15 professionally edited images</li><li><i class="fa-solid fa-check"></i> Private online gallery</li></ul>
+            <a href="#contact" class="btn btn-outline w-full mt-7">Enquire about portraits <i class="fa-solid fa-arrow-right"></i></a>
+          </article>
+          <article class="service-card reveal">
+            <div class="flex justify-between items-start"><span class="text-2xl accent"><i class="fa-regular fa-heart"></i></span><span class="eyebrow">02 / Celebrations</span></div>
+            <h3 class="text-2xl font-semibold mt-8">Event coverage</h3>
+            <p class="muted text-sm leading-6 mt-3">The big moments and the small ones you didn't see happen.</p>
+            <p class="mt-7 text-3xl font-semibold">From <span class="accent">R4,500</span></p>
+            <ul><li><i class="fa-solid fa-check"></i> Up to 4 hours of coverage</li><li><i class="fa-solid fa-check"></i> Pre-event planning call</li><li><i class="fa-solid fa-check"></i> 150+ edited images</li><li><i class="fa-solid fa-check"></i> Online gallery for sharing</li></ul>
+            <a href="#contact" class="btn btn-outline w-full mt-7">Plan your event <i class="fa-solid fa-arrow-right"></i></a>
+          </article>
+          <article class="service-card reveal">
+            <div class="flex justify-between items-start"><span class="text-2xl accent"><i class="fa-solid fa-camera-retro"></i></span><span class="eyebrow">03 / Brands</span></div>
+            <h3 class="text-2xl font-semibold mt-8">Commercial shoots</h3>
+            <p class="muted text-sm leading-6 mt-3">Distinctive visuals for products, campaigns and growing brands.</p>
+            <p class="mt-7 text-3xl font-semibold">Custom <span class="accent">quote</span></p>
+            <ul><li><i class="fa-solid fa-check"></i> Creative direction & shot list</li><li><i class="fa-solid fa-check"></i> Product or lifestyle photography</li><li><i class="fa-solid fa-check"></i> Image licensing options</li><li><i class="fa-solid fa-check"></i> Deliverables tailored to your brief</li></ul>
+            <a href="#contact" class="btn w-full mt-7">Discuss a campaign <i class="fa-solid fa-arrow-right"></i></a>
+          </article>
+        </div>
+        <p class="muted text-xs mt-5">* Example pricing in ZAR for this demo. Replace with your actual rates, deliverables and terms.</p>
+      </div>
+    </section>
+
+    <!-- CTA strip -->
+    <section class="py-20 border-y border-white/10 bg-[#151517]">
+      <div class="section-wrap flex flex-col lg:flex-row lg:items-center justify-between gap-8 reveal">
+        <div><p class="eyebrow mb-4">Have something in mind?</p><h2 class="display text-4xl sm:text-5xl font-semibold">Let's turn it into<br class="hidden sm:block" /> something unforgettable.</h2></div>
+        <a href="#contact" class="btn self-start">Tell me about it <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="section-space">
+      <div class="section-wrap grid lg:grid-cols-[.8fr_1.2fr] gap-14 lg:gap-24">
+        <div class="reveal">
+          <p class="eyebrow mb-4">Start a conversation</p>
+          <h2 class="display text-5xl sm:text-6xl md:text-7xl font-semibold">Your story<br />starts here.</h2>
+          <p class="muted leading-7 mt-7 max-w-md">Tell me what you're imagining. Whether you have every detail planned or just a feeling to chase, I'd love to hear about it.</p>
+          <div class="space-y-5 mt-10">
+            <a href="mailto:hello@noirphoto.example" class="flex gap-4 items-center group"><span class="w-11 h-11 border border-white/15 flex items-center justify-center group-hover:border-amber-600 transition"><i class="fa-regular fa-envelope accent"></i></span><span><span class="block text-xs muted mb-1">Email</span><span class="text-sm">hello@noirphoto.example</span></span></a>
+            <a href="tel:+27110000000" class="flex gap-4 items-center group"><span class="w-11 h-11 border border-white/15 flex items-center justify-center group-hover:border-amber-600 transition"><i class="fa-solid fa-phone accent"></i></span><span><span class="block text-xs muted mb-1">Phone / WhatsApp</span><span class="text-sm">+27 11 000 0000</span></span></a>
+            <div class="flex gap-4 items-center"><span class="w-11 h-11 border border-white/15 flex items-center justify-center"><i class="fa-solid fa-location-dot accent"></i></span><span><span class="block text-xs muted mb-1">Based in</span><span class="text-sm">Johannesburg, South Africa · Available worldwide</span></span></div>
+          </div>
+          <div class="flex gap-3 mt-8">
+            <!-- Replace # with your actual social profile URLs. -->
+            <a class="social-link" href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+            <a class="social-link" href="#" aria-label="Behance"><i class="fa-brands fa-behance"></i></a>
+            <a class="social-link" href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+          </div>
+        </div>
+
+        <form id="contactForm" class="space-y-5 reveal">
+          <div class="grid sm:grid-cols-2 gap-5">
+            <label class="block"><span class="block text-xs uppercase tracking-[.14em] muted mb-2">Your name</span><input class="field" type="text" name="name" placeholder="Name" autocomplete="name" required /></label>
+            <label class="block"><span class="block text-xs uppercase tracking-[.14em] muted mb-2">Email address</span><input class="field" type="email" name="email" placeholder="you@example.com" autocomplete="email" required /></label>
+          </div>
+          <label class="block"><span class="block text-xs uppercase tracking-[.14em] muted mb-2">What are we creating?</span>
+            <select class="field" name="project" required>
+              <option value="" disabled selected>Select a project type</option>
+              <option>Portrait session</option><option>Wedding</option><option>Event coverage</option><option>Commercial / brand shoot</option><option>Editorial / fashion</option><option>Other idea</option>
+            </select>
+          </label>
+          <label class="block"><span class="block text-xs uppercase tracking-[.14em] muted mb-2">Tell me a little more</span><textarea class="field min-h-36 resize-y" name="message" placeholder="Dates, location, your idea, budget range..." required></textarea></label>
+          <button class="btn w-full sm:w-auto" type="submit">Send your enquiry <i class="fa-solid fa-arrow-right"></i></button>
+          <p id="formStatus" class="muted text-xs leading-5" role="status">Demo form: connect this to a form service or backend before publishing.</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Expanded portfolio photograph" aria-hidden="true">
+    <button id="lightboxClose" class="lightbox-close" type="button" aria-label="Close expanded photograph"><i class="fa-solid fa-xmark"></i></button>
+    <figure class="text-center">
+      <img id="lightboxImage" src="" alt="" />
+      <figcaption id="lightboxCaption" class="text-sm muted mt-4"></figcaption>
+    </figure>
+  </div>
+
+  <footer class="border-t border-white/10 py-7">
+    <div class="section-wrap flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+      <a href="#home" class="font-bold tracking-[.2em] text-sm">NOIR<span class="accent">.</span></a>
+      <p class="muted text-xs">© <span id="year"></span> NOIR Photography. Made with intention.</p>
+      <a href="#home" class="muted text-xs hover:text-white transition">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile-friendly overlay navigation with Escape-key support.
+    const menuToggle = document.getElementById('menuToggle');
+    const navOverlay = document.getElementById('navOverlay');
+    const menuLines = menuToggle.querySelectorAll('.menu-line');
+
+    function setMenu(open) {
+      navOverlay.classList.toggle('open', open);
+      navOverlay.setAttribute('aria-hidden', String(!open));
+      menuToggle.setAttribute('aria-expanded', String(open));
+      menuToggle.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+      document.body.classList.toggle('menu-open', open);
+      menuLines[0].style.transform = open ? 'translateY(3.5px) rotate(45deg)' : '';
+      menuLines[1].style.transform = open ? 'translateY(-3.5px) rotate(-45deg)' : '';
+      menuLines[2].style.opacity = open ? '0' : '1';
+    }
+    menuToggle.addEventListener('click', () => setMenu(!navOverlay.classList.contains('open')));
+    navOverlay.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setMenu(false)));
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') setMenu(false); });
+
+    // Horizontal gallery controls and pointer dragging.
+    const track = document.getElementById('galleryTrack');
+    const galleryCards = [...track.querySelectorAll('.gallery-card')];
+    document.querySelectorAll('.filter-chip').forEach(button => {
+      button.addEventListener('click', () => {
+        const filter = button.dataset.filter;
+        document.querySelectorAll('.filter-chip').forEach(chip => chip.setAttribute('aria-pressed', String(chip === button)));
+        galleryCards.forEach(card => { card.hidden = filter !== 'all' && card.dataset.category !== filter; });
+        track.scrollTo({ left: 0, behavior: 'smooth' });
+      });
+    });
+
+    // Accessible image lightbox: opens with Enter/click, closes with Escape or the close button.
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImage = document.getElementById('lightboxImage');
+    const lightboxCaption = document.getElementById('lightboxCaption');
+    const lightboxClose = document.getElementById('lightboxClose');
+    let lastFocusedElement = null;
+    galleryCards.forEach(card => card.addEventListener('click', event => {
+      event.preventDefault();
+      const img = card.querySelector('img');
+      const title = card.querySelector('h3')?.innerText || 'Photography project';
+      lastFocusedElement = card;
+      lightboxImage.src = img.src.replace('w=900', 'w=1800');
+      lightboxImage.alt = img.alt;
+      lightboxCaption.textContent = title;
+      lightbox.classList.add('open');
+      lightbox.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('menu-open');
+      lightboxClose.focus();
+    }));
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+      lightbox.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('menu-open');
+      lightboxImage.src = '';
+      if (lastFocusedElement) lastFocusedElement.focus();
+    }
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', event => { if (event.target === lightbox) closeLightbox(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && lightbox.classList.contains('open')) closeLightbox(); });
+
+    document.getElementById('galleryPrev').addEventListener('click', () => track.scrollBy({ left: -track.clientWidth * .75, behavior: 'smooth' }));
+    document.getElementById('galleryNext').addEventListener('click', () => track.scrollBy({ left: track.clientWidth * .75, behavior: 'smooth' }));
+    let isDown = false, startX = 0, scrollLeft = 0, didDrag = false;
+    track.addEventListener('pointerdown', event => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      isDown = true; didDrag = false; startX = event.clientX; scrollLeft = track.scrollLeft;
+      track.setPointerCapture(event.pointerId);
+    });
+    track.addEventListener('pointermove', event => {
+      if (!isDown) return;
+      const distance = event.clientX - startX;
+      if (Math.abs(distance) > 5) didDrag = true;
+      if (didDrag) track.scrollLeft = scrollLeft - distance;
+    });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => track.addEventListener(type, () => { isDown = false; }));
+    track.addEventListener('click', event => { if (didDrag) { event.preventDefault(); event.stopPropagation(); } }, true);
+
+    // Reveal sections as they enter the viewport; respects reduced-motion preference in CSS.
+    const revealObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(element => revealObserver.observe(element));
+
+    // This demo form prepares an email draft; no data is uploaded or stored.
+    // For production, connect to Formspree, Netlify Forms, or your own backend.
+    document.getElementById('contactForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const data = new FormData(form);
+      const subject = encodeURIComponent('Photography enquiry — ' + data.get('project'));
+      const body = encodeURIComponent(
+        'Name: ' + data.get('name') + '\n' +
+        'Email: ' + data.get('email') + '\n' +
+        'Project: ' + data.get('project') + '\n\n' +
+        'Message:\n' + data.get('message')
+      );
+      document.getElementById('formStatus').textContent = 'Opening your email app with the enquiry prepared…';
+      window.location.href = 'mailto:hello@noirphoto.example?subject=' + subject + '&body=' + body;
+    });
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
